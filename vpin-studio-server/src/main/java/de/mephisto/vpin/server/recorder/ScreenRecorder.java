@@ -131,29 +131,22 @@ public class ScreenRecorder {
 
   private String formatOpenGlCommand(String cmd, int width, int height, int x, int y, long duration) {
     int outputIdx = 0;
-    int relX = x;
-    int relY = y;
-    if (cmd.contains("[output_idx]")) {
-      GraphicsDevice[] screens = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-      for (int i = 0; i < screens.length; i++) {
-        Rectangle bounds = screens[i].getDefaultConfiguration().getBounds();
-        if (bounds.contains(x, y)) {
-          outputIdx = i;
-          relX = x - bounds.x;
-          relY = y - bounds.y;
-          break;
-        }
-      }
+    int adapterIdx = 0;
+    String command = cmd;
+
+    //Using the left value here to match the screens as it should match x
+    DxgiAdapterUtil.ScreenInfo screen = DxgiAdapterUtil.findScreenByLeft(x);
+    if (screen != null) {
+      command = command.replace("[output_idx]", String.valueOf(screen.outputIndex));
+      command = command.replace("[adapter_idx]", String.valueOf(screen.adapterIndex));
+    } else {
+      //maybe log an error/warning here?
     }
 
-    String command = cmd;
-    command = command.replace("[output_idx]", String.valueOf(outputIdx));
-    command = command.replace("[x]", String.valueOf(relX));
-    command = command.replace("[y]", String.valueOf(relY));
     command = command.replace("[duration]", String.valueOf(duration));
     command = command.replace("[width]", String.valueOf(width));
     command = command.replace("[height]", String.valueOf(height));
-    command = command.replace("[adapter_idx]", "0");
+
     return command;
   }
 
